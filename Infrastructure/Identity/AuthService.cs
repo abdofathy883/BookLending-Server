@@ -1,5 +1,6 @@
 ﻿using Application.DTOs.Auth;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Infrastructure.Persistance;
 using Microsoft.AspNetCore.Identity;
@@ -132,7 +133,15 @@ namespace Infrastructure.Identity
                 if (!result.Succeeded)
                     return FailResult("Failed To Add New User");
 
-                await userManager.AddToRoleAsync(user, newUser.Role.ToString());
+                if (newUser.Role.HasValue)
+                {
+                    await userManager.AddToRoleAsync(user, newUser.Role.ToString());
+                }
+                else
+                {
+                    await userManager.AddToRoleAsync(user, UserRoles.Customer.ToString());
+                }
+
 
                 var authDTO = new AuthResponseDTO
                 {

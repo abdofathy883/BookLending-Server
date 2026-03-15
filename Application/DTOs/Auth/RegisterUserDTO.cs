@@ -8,6 +8,6 @@ namespace Application.DTOs.Auth
         public required string Email { get; set; }
         public required string PhoneNumber { get; set; }
         public required string Password { get; set; }
-        public required UserRoles Role { get; set; }
+        public UserRoles? Role { get; set; }
     }
 }
