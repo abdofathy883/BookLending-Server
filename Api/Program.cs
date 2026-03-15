@@ -2,6 +2,7 @@ using Application.Interfaces;
 using Application.MappingProfiles;
 using Domain.Entities;
 using Domain.Interfaces;
+using Domain.Settings;
 using Hangfire;
 using Infrastructure.Identity;
 using Infrastructure.Persistance;
@@ -10,6 +11,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Text;
 
 namespace Api
 {
@@ -31,6 +35,11 @@ namespace Api
             .AddEntityFrameworkStores<BookLendingDbContext>()
             .AddDefaultTokenProviders();
 
+            JWTSettings jwtOptions = builder.Configuration.GetSection("JWT").Get<JWTSettings>()
+                ?? throw new Exception("Error in JWT Settings");
+
+            builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSetting"));
+
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -40,19 +49,19 @@ namespace Api
                 {
                     options.RequireHttpsMetadata = false;
                     options.SaveToken = true;
-                    //options.TokenValidationParameters = new TokenValidationParameters
-                    //{
-                    //    ValidateIssuer = true,
-                    //    ValidIssuer = jwtOptions.Issuer,
-                    //    ValidateAudience = true,
-                    //    ValidAudience = jwtOptions.Audience,
-                    //    ValidateIssuerSigningKey = true,
-                    //    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
-                    //    ClockSkew = TimeSpan.Zero,
-                    //    RoleClaimType = ClaimTypes.Role,
-                    //    NameClaimType = ClaimTypes.NameIdentifier,
-                    //    ValidateLifetime = true,
-                    //};
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = jwtOptions.Issuer,
+                        ValidateAudience = true,
+                        ValidAudience = jwtOptions.Audience,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+                        ClockSkew = TimeSpan.Zero,
+                        RoleClaimType = ClaimTypes.Role,
+                        NameClaimType = ClaimTypes.NameIdentifier,
+                        ValidateLifetime = true,
+                    };
                 });
 
             builder.Services.AddControllers();
