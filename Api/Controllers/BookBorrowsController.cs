@@ -1,6 +1,7 @@
 using Application.DTOs.Books;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Api.Controllers
 {
@@ -19,6 +20,13 @@ namespace Api.Controllers
         public async Task<ActionResult<List<BookBorrowDto>>> GetAll()
         {
             var borrows = await _bookBorrowService.GetAll();
+            return Ok(borrows);
+        }
+        
+        [HttpGet("overdue")]
+        public async Task<ActionResult<List<OverdueBorrowDto>>> GetAllOverdue()
+        {
+            var borrows = await _bookBorrowService.GetAllOverdue();
             return Ok(borrows);
         }
 
@@ -41,7 +49,8 @@ namespace Api.Controllers
         {
             try
             {
-                var borrow = await _bookBorrowService.BorrowBook(borrowDto);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var borrow = await _bookBorrowService.BorrowBook(borrowDto, userId);
                 return Ok(borrow);
             }
             catch (KeyNotFoundException ex)
@@ -59,7 +68,8 @@ namespace Api.Controllers
         {
             try
             {
-                var borrow = await _bookBorrowService.ReturnBook(returnDto);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var borrow = await _bookBorrowService.ReturnBook(returnDto, userId);
                 return Ok(borrow);
             }
             catch (KeyNotFoundException ex)

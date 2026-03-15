@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Application.MappingProfiles;
+using Domain.Entities;
 using Domain.Interfaces;
 using Hangfire;
 using Infrastructure.Identity;
@@ -9,9 +10,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Text;
 
 namespace Api
 {

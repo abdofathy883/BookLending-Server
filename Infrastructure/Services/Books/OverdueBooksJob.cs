@@ -18,7 +18,7 @@ namespace Infrastructure.Services.Books
 
         public async Task CheckOverdueBooksAsync()
         {
-            var overdueBooks = await bookBorrowService.GetDailyDelayed();
+            var overdueBooks = await bookBorrowService.MarkBooksAsOverdue();
 
             if (!overdueBooks.Any())
             {

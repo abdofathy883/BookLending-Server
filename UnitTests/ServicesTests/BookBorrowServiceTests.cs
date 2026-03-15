@@ -40,6 +40,11 @@ namespace UnitTests.ServicesTests
         {
             // Arrange
             var context = CreateContext();
+
+            var user = new ApplicationUser { Id = "user-1", FullName = "Test User", UserName = "testuser" };
+            context.Users.Add(user);
+
+
             var book = new Book { Id = 1, Status = BookStatus.Free, Title = "Test Book" };
             context.Books.Add(book);
             await context.SaveChangesAsync();
@@ -47,7 +52,7 @@ namespace UnitTests.ServicesTests
             var service = new BookBorrowService(context, CreateMapper());
 
             // Act
-            var result = await service.BorrowBook(new BorrowBookDto { BookId = 1 });
+            var result = await service.BorrowBook(new BorrowBookDto { BookId = 1 }, "user-1");
 
             // Assert
             result.Should().NotBeNull();
@@ -65,7 +70,7 @@ namespace UnitTests.ServicesTests
             var service = new BookBorrowService(context, CreateMapper());
 
             // Act
-            var act = async () => await service.BorrowBook(new BorrowBookDto { BookId = 1 });
+            var act = async () => await service.BorrowBook(new BorrowBookDto { BookId = 1 }, "user-1");
 
             // Assert
             await act.Should().ThrowAsync<InvalidOperationException>();

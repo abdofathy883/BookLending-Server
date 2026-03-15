@@ -19,7 +19,7 @@ namespace Infrastructure.Services.Books
             mapper = _mapper;
         }
 
-        public async Task<BookBorrowDto> BorrowBook(BorrowBookDto borrowDto)
+        public async Task<BookBorrowDto> BorrowBook(BorrowBookDto borrowDto, string userId)
         {
             var book = await context.Books.FindAsync(borrowDto.BookId)
                 ?? throw new KeyNotFoundException("الكتاب غير موجود");
@@ -36,6 +36,7 @@ namespace Infrastructure.Services.Books
             {
                 BookId = book.Id,
                 Book = book,
+                UserId = userId,
                 BorrowDate = DateTime.UtcNow,
                 ReturnDate = DateTime.UtcNow.AddDays(7),
                 IsReturned = false
@@ -47,9 +48,10 @@ namespace Infrastructure.Services.Books
             return mapper.Map<BookBorrowDto>(bookBorrow);
         }
 
-        public async Task<BookBorrowDto> ReturnBook(ReturnBookDto returnDto)
+        public async Task<BookBorrowDto> ReturnBook(ReturnBookDto returnDto, string userId)
         {
-            var book = await context.Books.FindAsync(returnDto.BookId)
+            var book = await context.Books
+                .FindAsync(returnDto.BookId)
                 ?? throw new KeyNotFoundException("الكتاب غير موجود");
 
             if (book.Status != BookStatus.Borrowed)
@@ -57,7 +59,8 @@ namespace Infrastructure.Services.Books
 
             var activeBorrow = await context.BookBorrows
                 .Include(bb => bb.Book)
-                .Where(bb => bb.BookId == returnDto.BookId)
+                .Include(bb => bb.User)
+                .Where(bb => bb.BookId == returnDto.BookId && bb.UserId == userId)
                 .OrderByDescending(bb => bb.BorrowDate)
                 .FirstOrDefaultAsync()
                 ?? throw new InvalidOperationException("لا يوجد سجل استعارة نشط لهذا الكتاب");
@@ -66,7 +69,6 @@ namespace Infrastructure.Services.Books
             book.Status = BookStatus.Free;
 
             await context.SaveChangesAsync();
-
             return mapper.Map<BookBorrowDto>(activeBorrow);
         }
 
@@ -74,10 +76,22 @@ namespace Infrastructure.Services.Books
         {
             var borrows = await context.BookBorrows
                 .Include(bb => bb.Book)
+                .Include(bb => bb.User)
                 .OrderByDescending(bb => bb.BorrowDate)
                 .ToListAsync();
 
             return mapper.Map<List<BookBorrowDto>>(borrows);
+        }
+        
+        public async Task<List<OverdueBorrowDto>> GetAllOverdue()
+        {
+            var overdues = await context.OverdueBorrows
+                .Include(bb => bb.Book)
+                .Include(bb => bb.User)
+                .OrderByDescending(bb => bb.BorrowDate)
+                .ToListAsync();
+
+            return mapper.Map<List<OverdueBorrowDto>>(overdues);
         }
 
         public async Task<List<BookBorrowDto>> GetByBookId(int bookId)
@@ -88,6 +102,7 @@ namespace Infrastructure.Services.Books
 
             var borrows = await context.BookBorrows
                 .Include(bb => bb.Book)
+                .Include(bb => bb.User)
                 .Where(bb => bb.BookId == bookId)
                 .OrderByDescending(bb => bb.BorrowDate)
                 .ToListAsync();
@@ -95,11 +110,12 @@ namespace Infrastructure.Services.Books
             return mapper.Map<List<BookBorrowDto>>(borrows);
         }
 
-        public async Task<List<OverdueBorrowDto>> GetDailyDelayed()
+        public async Task<List<OverdueBorrowDto>> MarkBooksAsOverdue()
         {
             DateTime today = DateTime.UtcNow.Date;
             var borrows = await context.BookBorrows
                 .Include(bb => bb.Book)
+                .Include(bb => bb.User)
                 .Where(bb => !bb.IsReturned && bb.ReturnDate < today)
                 .OrderByDescending(bb => bb.BorrowDate)
                 .ToListAsync();
@@ -113,6 +129,7 @@ namespace Infrastructure.Services.Books
                 {
                     var overdueBorrow = new OverdueBorrow
                     {
+                        UserId = borrow.UserId,
                         BookId = borrow.BookId,
                         BorrowDate = borrow.BorrowDate,
                         ReturnDate = borrow.ReturnDate

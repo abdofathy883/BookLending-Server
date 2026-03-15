@@ -19,9 +19,17 @@ namespace Infrastructure.Persistance.EntityConfigurations
             builder.Property(bb => bb.ReturnDate)
                 .IsRequired(false);
 
+            builder.Property(bb => bb.UserId)
+                .IsRequired();
+
             builder.HasOne(bb => bb.Book)
                 .WithMany(b => b.OverdueBorrows)
                 .HasForeignKey(bb => bb.BookId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.HasOne(bb => bb.User)
+                .WithMany(u => u.OverdueBorrows)
+                .HasForeignKey(bb => bb.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }

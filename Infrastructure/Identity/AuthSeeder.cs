@@ -1,4 +1,5 @@
-﻿using Infrastructure.Persistance;
+﻿using Domain.Entities;
+using Infrastructure.Persistance;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
