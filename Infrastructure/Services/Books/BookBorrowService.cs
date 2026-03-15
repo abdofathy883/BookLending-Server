@@ -65,6 +65,11 @@ namespace Infrastructure.Services.Books
                 .FirstOrDefaultAsync()
                 ?? throw new InvalidOperationException("لا يوجد سجل استعارة نشط لهذا الكتاب");
 
+            if (activeBorrow.UserId != userId)
+            {
+                throw new InvalidOperationException("لا يمكنك إرجاع كتاب لم تستعره");
+            }
+
             activeBorrow.IsReturned = true;
             book.Status = BookStatus.Free;
 
